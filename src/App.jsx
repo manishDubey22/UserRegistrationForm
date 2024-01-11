@@ -7,7 +7,11 @@ function classNames(...classes) {
 }
 
 export default function Example() {
+  const takenUserName = "hello";
   const [agreed, setAgreed] = useState(false);
+  const [userNameCheck, setUserNameCheck] = useState(false);
+  const [passwordConfirmationCheck, setPasswordConfirmationCheck] =
+    useState(false);
   const {
     register,
     handleSubmit,
@@ -16,28 +20,41 @@ export default function Example() {
   } = useForm();
 
   const onSubmit = async (data) => {
-    if (data.password !== data.passwordConfirmation) {
-      alert("Password not matched. Please check.");
-      return;
-    } else {
-      try {
-        const response = await fetch("https://example.com/submit-form", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
+    setUserNameCheck(false);
+    setPasswordConfirmationCheck(false);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! with the status of ${response.status}`);
-        }
-        const responseData = await response.json();
-        console.log("Form submitted successfully. Thank you.", responseData);
-      } catch (error) {
-        console.error("Error submitting form. Please check.", error);
+    const apiUrl = "https://example.com/submit-form";
+
+    try {
+      if (data.userName?.toLowerCase() === takenUserName) {
+        setUserNameCheck(true);
       }
+      if (data.password !== data.passwordConfirmation) {
+        setPasswordConfirmationCheck(true);
+        return;
+      }
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! with the status of ${response.status}`);
+      }
+      const responseData = await response.json();
+    } catch (error) {
     }
+  };
+
+  const handleUsernameChange = (e) => {
+    setUserNameCheck(false);
+  };
+
+  const handlePasswordConfirmationChange = (e) => {
+    setPasswordConfirmationCheck(false);
   };
 
   return (
@@ -83,9 +100,11 @@ export default function Example() {
                 placeholder="User name"
                 {...register("userName", {
                   required: "User name is required",
-                  validate: (value) =>
-                    value !== "hello" || "It's already taken",
+                  // validate: (value) =>
+                  //   value !== "hello" || "It's already taken",
                 })}
+                // onChange={setUserNameCheck(false)}
+                onChange={handleUsernameChange}
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
             </div>
@@ -93,6 +112,9 @@ export default function Example() {
               <p className="text-red-500 text-xs italic">
                 {errors.userName.message}
               </p>
+            )}
+            {userNameCheck && (
+              <p className="text-red-500 text-xs italic">It's already taken</p>
             )}
           </div>
           <div className="sm:col-span-2">
@@ -168,22 +190,28 @@ export default function Example() {
                 placeholder="Password Confirmation"
                 {...register("passwordConfirmation", {
                   required: "Password Confirmation is required",
-                  validate: {
-                    matchesPreviousPassword: (value) => {
-                      const { password } = getValues();
-                      return (
-                        password === value ||
-                        "Password not matched. Please check."
-                      );
-                    },
-                  },
+                  // validate: {
+                  //   matchesPreviousPassword: (value) => {
+                  //     const { password } = getValues();
+                  //     return (
+                  //       password === value ||
+                  //       "Password not matched. Please check."
+                  //     );
+                  //   },
+                  // },
                 })}
+                onChange={handlePasswordConfirmationChange}
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
             </div>
             {errors.passwordConfirmation && (
               <p className="text-red-500 text-xs italic">
                 {errors.passwordConfirmation.message}
+              </p>
+            )}
+            {passwordConfirmationCheck && (
+              <p className="text-red-500 text-xs italic">
+                Password not matched. Please check.
               </p>
             )}
           </div>
